@@ -10,15 +10,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-//@Slf4j
+@Slf4j
 @RestController
 @RequestMapping("/api/employees")
 public class EmployeeApiController {
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(EmployeeApiController.class);
 
-
-
-    //    @Autowired
     private final EmployeeRepository repository;
 
     public EmployeeApiController(EmployeeRepository repo) {
