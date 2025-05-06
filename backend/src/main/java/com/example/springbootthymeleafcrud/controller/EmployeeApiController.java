@@ -36,7 +36,7 @@ public class EmployeeApiController {
         log.info("Fetching employees with pagination and sorting: {}", pageable);
         Status enumStatus = Status.valueOf(status.toUpperCase());
 
-        Page<Employee> employees = repository.findAllByStatus(pageable,enumStatus);
+        Page<Employee> employees = repository.findAllByStatus(pageable, enumStatus);
 
         Page<EmployeeResponseDTO> employeeDTOs = employees.map(employee ->
                 new EmployeeResponseDTO(employee.getId(), employee.getName(), employee.getEmail()));
@@ -98,15 +98,15 @@ public class EmployeeApiController {
 
     @PutMapping("/{id}")
 //    public Employee updateEmployee(@PathVariable Long id, @Valid @RequestBody Employee employeeDetails) {
-      public ResponseEntity<EmployeeResponseDTO> updateEmployee(@PathVariable Long id, @Valid @RequestBody EmployeeCreateDTO employeeDTO) {
+    public ResponseEntity<EmployeeResponseDTO> updateEmployee(@PathVariable Long id, @Valid @RequestBody EmployeeCreateDTO employeeDTO) {
 
-            log.info("Updating employee with id: {}", id);
+        log.info("Updating employee with id: {}", id);
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id " + id));
 
         employee.setName(employeeDTO.getName());
         employee.setEmail(employeeDTO.getEmail());
-        Employee updatedEmployee =  repository.save(employee);
+        Employee updatedEmployee = repository.save(employee);
 
         EmployeeResponseDTO responseDTO = new EmployeeResponseDTO(updatedEmployee.getId(), updatedEmployee.getName(), updatedEmployee.getEmail());
 
@@ -125,11 +125,21 @@ public class EmployeeApiController {
 
         if (hardDelete) {
             repository.delete(employee);
-        }else {
+        } else {
             employee.setStatus(Status.INACTIVE);
             repository.save(employee);
         }
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<EmployeeResponseDTO>> searchEmployees(@RequestParam String query, Pageable pageable) {
+        log.info("Searching employees with query: {}", query);
+        Page<Employee> employees = repository.searchByNameOrEmailPaged(query, pageable);
+        Page<EmployeeResponseDTO> responseDTOs = employees
+                .map(employee -> new EmployeeResponseDTO(employee.getId(), employee.getName(), employee.getEmail()));
+        return ResponseEntity.ok(responseDTOs);
+
     }
 }

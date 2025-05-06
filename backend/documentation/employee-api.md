@@ -165,7 +165,7 @@ Here are the example curl commands for soft delete and hard delete using your up
 
 ---
 
-### ✅ Soft Delete (Mark as INACTIVE)
+###  Soft Delete (Mark as INACTIVE)
 
 This is the default behavior (hardDelete=false):
 
@@ -183,7 +183,7 @@ curl -X DELETE "http://localhost:8080/api/employees/10?hardDelete=false"
 
 ---
 
-### ✅ Hard Delete (Permanently Delete)
+###  Hard Delete (Permanently Delete)
 
 This deletes the record from the database:
 
@@ -191,12 +191,45 @@ This deletes the record from the database:
 curl -X DELETE "http://localhost:8080/api/employees/10?hardDelete=true"
 ```
 
+
 ---
 
-📌 Note:
+### 6.  Search by name or email (query = "Jo")
 
-* Replace 10 with the actual employee ID.
-* If your API is secured with authentication, you may need to add headers like -H "Authorization: Bearer <token>".
-* Ensure that your Spring Boot application is running on port 8080 (or modify the port if different).
+```bash
+curl -X GET "http://localhost:8080/api/employees/search?query=Jo"
+```
 
-Would you like a Postman collection for these as well?
+This will return employees like:
+
+```json
+[
+  { "id": 1, "name": "John Doe", "email": "john@example.com" },
+  { "id": 2, "name": "Joseph Smith", "email": "joe.smith@corp.com" }
+]
+```
+
+---
+
+### ✅ With pagination (optional, if supported):
+
+```bash
+curl -X GET "http://localhost:8080/api/employees/search?query=Jo&page=0&size=5"
+```
+
+This would return paged results like:
+
+```json
+{
+  "content": [
+    { "id": 1, "name": "John Doe", "email": "john@example.com" },
+    { "id": 2, "name": "Joseph Smith", "email": "joe.smith@corp.com" }
+  ],
+  "totalElements": 2,
+  "totalPages": 1,
+  "number": 0,
+  "size": 5
+}
+```
+
+---
