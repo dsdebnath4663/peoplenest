@@ -16,9 +16,14 @@ import java.util.List;
 public class EmployeeApiController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(EmployeeApiController.class);
 
-    @Autowired
-    private EmployeeRepository repository;
 
+
+    //    @Autowired
+    private final EmployeeRepository repository;
+
+    public EmployeeApiController(EmployeeRepository repo) {
+        this.repository = repo;
+    }
     @GetMapping
     public List<Employee> listAll() {
         log.info("Fetching all employees");
