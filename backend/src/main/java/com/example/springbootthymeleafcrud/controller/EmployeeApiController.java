@@ -1,19 +1,19 @@
 package com.example.springbootthymeleafcrud.controller;
 
+import com.example.springbootthymeleafcrud.dto.EmployeeCreateDTO;
+import com.example.springbootthymeleafcrud.dto.EmployeeResponseDTO;
 import com.example.springbootthymeleafcrud.exception.ResourceNotFoundException;
 import com.example.springbootthymeleafcrud.model.Employee;
 import com.example.springbootthymeleafcrud.repository.EmployeeRepository;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 
 @Slf4j
@@ -26,50 +26,96 @@ public class EmployeeApiController {
     public EmployeeApiController(EmployeeRepository repo) {
         this.repository = repo;
     }
+
     @GetMapping
-    public ResponseEntity<Page<Employee>> listAll(Pageable pageable) {
+    public ResponseEntity<Page<EmployeeResponseDTO>> listAll(Pageable pageable) {
         log.info("Fetching employees with pagination and sorting: {}", pageable);
         Page<Employee> employees = repository.findAll(pageable);
-        return ResponseEntity.ok(employees);
+
+        Page<EmployeeResponseDTO> employeeDTOs = employees.map(employee ->
+                new EmployeeResponseDTO(employee.getId(), employee.getName(), employee.getEmail()));
+
+        return ResponseEntity.ok(employeeDTOs);
     }
 
     @PostMapping
-    public Employee createEmployee(@Valid @RequestBody Employee employee) {
-        log.info("Creating new employee: {}", employee);
-        return repository.save(employee);
+    public ResponseEntity<EmployeeResponseDTO> createEmployee(@Valid @RequestBody EmployeeCreateDTO employeeDTO) {
+
+        log.info("Creating new employee: {}", employeeDTO);
+        Employee employee = new Employee();
+        employee.setName(employeeDTO.getName());
+        employee.setEmail(employeeDTO.getEmail());
+
+
+        Employee savedEmployee = repository.save(employee);
+
+        EmployeeResponseDTO responseDTO = new EmployeeResponseDTO(savedEmployee.getId(), savedEmployee.getName(), savedEmployee.getEmail());
+
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+
+
     }
 
     @PostMapping("/bulk")
-    public ResponseEntity<List<Employee>> createBulkEmployees(@RequestBody List<Employee> employees) {
+//    public ResponseEntity<List<Employee>> createBulkEmployees(@RequestBody List<Employee> employees) {
+    public ResponseEntity<List<EmployeeResponseDTO>> createBulkEmployees(@RequestBody List<EmployeeCreateDTO> employeeDTOs) {
+
+        // Convert DTOs to entities and save them
+        List<Employee> employees = employeeDTOs.stream()
+                .map(dto -> new Employee(dto.getName(), dto.getEmail()))
+                .toList();
+
         // Save the list of employees
         List<Employee> savedEmployees = repository.saveAll(employees);
 
+
+        // Convert saved entities to DTOs
+        List<EmployeeResponseDTO> responseDTOs = savedEmployees.stream()
+                .map(employee -> new EmployeeResponseDTO(employee.getId(), employee.getName(), employee.getEmail()))
+                .toList();
         // Return the saved employees with 201 Created status
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedEmployees);
-    }
-    @GetMapping("/{id}")
-    public Employee getEmployee(@PathVariable Long id) {
-        log.info("Fetching employee with id: {}", id);
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id " + id));
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTOs);
     }
 
-    @PutMapping("/{id}")
-    public Employee updateEmployee(@PathVariable Long id, @Valid @RequestBody Employee employeeDetails) {
-        log.info("Updating employee with id: {}", id);
+    @GetMapping("/{id}")
+    public ResponseEntity<EmployeeResponseDTO> getEmployee(@PathVariable Long id) {
+
+        log.info("Fetching employee with id: {}", id);
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id " + id));
 
-        employee.setName(employeeDetails.getName());
-        employee.setEmail(employeeDetails.getEmail());
-        return repository.save(employee);
+        EmployeeResponseDTO responseDTO = new EmployeeResponseDTO(employee.getId(), employee.getName(), employee.getEmail());
+        return ResponseEntity.ok(responseDTO);
+
+    }
+
+    @PutMapping("/{id}")
+//    public Employee updateEmployee(@PathVariable Long id, @Valid @RequestBody Employee employeeDetails) {
+      public ResponseEntity<EmployeeResponseDTO> updateEmployee(@PathVariable Long id, @Valid @RequestBody EmployeeCreateDTO employeeDTO) {
+
+            log.info("Updating employee with id: {}", id);
+        Employee employee = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id " + id));
+
+        employee.setName(employeeDTO.getName());
+        employee.setEmail(employeeDTO.getEmail());
+        Employee updatedEmployee =  repository.save(employee);
+
+        EmployeeResponseDTO responseDTO = new EmployeeResponseDTO(updatedEmployee.getId(), updatedEmployee.getName(), updatedEmployee.getEmail());
+
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+
     }
 
     @DeleteMapping("/{id}")
-    public void deleteEmployee(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
         log.info("Deleting employee with id: {}", id);
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id " + id));
         repository.delete(employee);
+
+        return ResponseEntity.noContent().build();
     }
 }
