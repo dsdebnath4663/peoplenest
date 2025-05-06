@@ -161,12 +161,42 @@ curl -X DELETE http://localhost:8080/api/employees/1
 ```
 *(replace `1` with the actual employee ID)*
 
----
-
-# 📚 Notes
-- `-X` → HTTP Method (`GET`, `POST`, `PUT`, `DELETE`)
-- `-H "Content-Type: application/json"` → Tells server body is JSON
-- `-d` → Request body data (only for `POST` and `PUT`)
-- `localhost:8080` → Default Spring Boot port (change if your app runs elsewhere)
+Here are the example curl commands for soft delete and hard delete using your updated DELETE /api/employees/{id} API:
 
 ---
+
+### ✅ Soft Delete (Mark as INACTIVE)
+
+This is the default behavior (hardDelete=false):
+
+```bash
+curl -X DELETE http://localhost:8080/api/employees/10
+```
+
+Or explicitly:
+
+```bash
+curl -X DELETE "http://localhost:8080/api/employees/10?hardDelete=false"
+```
+
+📝 This will set the employee's status to INACTIVE without removing the record from the database.
+
+---
+
+### ✅ Hard Delete (Permanently Delete)
+
+This deletes the record from the database:
+
+```bash
+curl -X DELETE "http://localhost:8080/api/employees/10?hardDelete=true"
+```
+
+---
+
+📌 Note:
+
+* Replace 10 with the actual employee ID.
+* If your API is secured with authentication, you may need to add headers like -H "Authorization: Bearer <token>".
+* Ensure that your Spring Boot application is running on port 8080 (or modify the port if different).
+
+Would you like a Postman collection for these as well?

@@ -2,6 +2,7 @@ package com.example.springbootthymeleafcrud.controller;
 
 import com.example.springbootthymeleafcrud.dto.EmployeeCreateDTO;
 import com.example.springbootthymeleafcrud.dto.EmployeeResponseDTO;
+import com.example.springbootthymeleafcrud.enums.Status;
 import com.example.springbootthymeleafcrud.exception.ResourceNotFoundException;
 import com.example.springbootthymeleafcrud.model.Employee;
 import com.example.springbootthymeleafcrud.repository.EmployeeRepository;
@@ -28,9 +29,14 @@ public class EmployeeApiController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<EmployeeResponseDTO>> listAll(Pageable pageable) {
+//    public ResponseEntity<Page<EmployeeResponseDTO>> listAll(Pageable pageable) {
+    public ResponseEntity<Page<EmployeeResponseDTO>> listAll(@RequestParam(defaultValue = "ACTIVE") String status,
+                                                             Pageable pageable) {
+
         log.info("Fetching employees with pagination and sorting: {}", pageable);
-        Page<Employee> employees = repository.findAll(pageable);
+        Status enumStatus = Status.valueOf(status.toUpperCase());
+
+        Page<Employee> employees = repository.findAllByStatus(pageable,enumStatus);
 
         Page<EmployeeResponseDTO> employeeDTOs = employees.map(employee ->
                 new EmployeeResponseDTO(employee.getId(), employee.getName(), employee.getEmail()));
@@ -110,11 +116,19 @@ public class EmployeeApiController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id,
+                                               @RequestParam(defaultValue = "false") boolean hardDelete) {
         log.info("Deleting employee with id: {}", id);
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id " + id));
-        repository.delete(employee);
+
+
+        if (hardDelete) {
+            repository.delete(employee);
+        }else {
+            employee.setStatus(Status.INACTIVE);
+            repository.save(employee);
+        }
 
         return ResponseEntity.noContent().build();
     }
