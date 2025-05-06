@@ -6,9 +6,15 @@ import com.example.springbootthymeleafcrud.repository.EmployeeRepository;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 @Slf4j
 @RestController
@@ -21,9 +27,10 @@ public class EmployeeApiController {
         this.repository = repo;
     }
     @GetMapping
-    public List<Employee> listAll() {
-        log.info("Fetching all employees");
-        return repository.findAll();
+    public ResponseEntity<Page<Employee>> listAll(Pageable pageable) {
+        log.info("Fetching employees with pagination and sorting: {}", pageable);
+        Page<Employee> employees = repository.findAll(pageable);
+        return ResponseEntity.ok(employees);
     }
 
     @PostMapping
@@ -32,6 +39,14 @@ public class EmployeeApiController {
         return repository.save(employee);
     }
 
+    @PostMapping("/bulk")
+    public ResponseEntity<List<Employee>> createBulkEmployees(@RequestBody List<Employee> employees) {
+        // Save the list of employees
+        List<Employee> savedEmployees = repository.saveAll(employees);
+
+        // Return the saved employees with 201 Created status
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedEmployees);
+    }
     @GetMapping("/{id}")
     public Employee getEmployee(@PathVariable Long id) {
         log.info("Fetching employee with id: {}", id);
