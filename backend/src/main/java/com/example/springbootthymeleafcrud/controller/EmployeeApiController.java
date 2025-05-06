@@ -69,7 +69,9 @@ public class EmployeeApiController {
 
         // Convert DTOs to entities and save them
         List<Employee> employees = employeeDTOs.stream()
-                .map(dto -> new Employee(dto.getName(), dto.getEmail()))
+//                .map(dto -> new Employee(dto.getName(), dto.getEmail()))
+                .map(dto -> new Employee(dto.getName(), dto.getEmail(), Status.ACTIVE, dto.getDepartment()))
+
                 .toList();
 
         // Save the list of employees
@@ -142,4 +144,21 @@ public class EmployeeApiController {
         return ResponseEntity.ok(responseDTOs);
 
     }
+
+    @GetMapping("/filter")
+    public ResponseEntity<Page<EmployeeResponseDTO>> filterByDepartmentAndStatus(
+            @RequestParam String department,
+            @RequestParam Status status,
+            Pageable pageable) {
+        log.info("Filtering employees by department={} and status={}", department, status);
+
+        Page<Employee> employees = repository.findByDepartmentIgnoreCaseAndStatus(department, status,pageable);
+
+        Page<EmployeeResponseDTO> responseDTOs = employees
+                .map(employee -> new EmployeeResponseDTO(employee.getId(), employee.getName(), employee.getEmail()));
+
+        return ResponseEntity.ok(responseDTOs);
+    }
+
+
 }

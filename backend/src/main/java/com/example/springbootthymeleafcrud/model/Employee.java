@@ -4,6 +4,7 @@ import com.example.springbootthymeleafcrud.enums.Status;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 //@NoArgsConstructor
+@AllArgsConstructor
 public class Employee {
 
     @Id
@@ -40,6 +42,9 @@ public class Employee {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @NotBlank(message = "Department is mandatory")
+    private String department;
+
 
     public  Employee(){
 
@@ -49,5 +54,12 @@ public class Employee {
         this.email=email;
         this.status = Status.ACTIVE;
 
+    }
+
+    public Employee(String name, String email, Status status, String department) {
+        this.name=name;
+        this.email=email;
+        this.status = Status.ACTIVE;
+        this.department=department;
     }
 }

@@ -16,4 +16,7 @@ public class EmployeeCreateDTO {
     @NotBlank(message = "Email is mandatory")
     @Email(message = "Email should be valid")
     private String email;
+
+    @NotBlank(message = "Department is mandatory")
+    private String department;
 }
